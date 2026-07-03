@@ -83,3 +83,9 @@ def fetch_energy(start: date, end: date) -> pd.DataFrame:
     mask = df["demand_mw"].notna()
     df.loc[mask, ["solar_mw", "wind_mw"]] = df.loc[mask, ["solar_mw", "wind_mw"]].fillna(0.0)
     return df.sort_values("timestamp").reset_index(drop=True)
+
+
+def fetch_generation(psr_type: str, start: date, end: date) -> pd.DataFrame:
+    """Hourly actual generation for one production type, columns: timestamp, mw."""
+    key = os.environ["ENTSOE_API_KEY"]
+    return _fetch_series(key, {"documentType": "A75", "processType": "A16", "in_Domain": _AREA, "psrType": psr_type}, "mw", start, end)

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ResponsiveContainer, ComposedChart, Line, Area,
   XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
@@ -18,6 +19,11 @@ function GapTooltip({ active, payload, label }) {
       {row.baseGap != null && (
         <p className="tabular-nums text-gray-500 dark:text-gray-400">baseline {fmtMW(row.baseGap)}</p>
       )}
+      {row.residual != null && (
+        <p className="tabular-nums text-violet-600 dark:text-violet-400">
+          after nuclear + hydro {fmtMW(row.residual)}
+        </p>
+      )}
       <p className="mt-1 font-medium" style={{ color: STATUS[row.status] }}>
         {meta.glyph} {meta.label}
       </p>
@@ -29,6 +35,8 @@ function GapTooltip({ active, payload, label }) {
 // line. When the sliders are off 1.0x, a dashed baseline ghost appears.
 export default function GapChart({ forecasts, baseline, dark, onHover }) {
   const colors = dark ? SERIES.dark : SERIES.light
+  const hasClean = forecasts[0]?.clean_mw != null
+  const [showResidual, setShowResidual] = useState(false)
   const showBaseline = baseline && baseline.length === forecasts.length &&
     forecasts.some((f, i) => Math.abs(f.supply_gap.point - baseline[i].supply_gap.point) > 1)
 
@@ -40,6 +48,7 @@ export default function GapChart({ forecasts, baseline, dark, onHover }) {
     band: f.supply_gap.upper - f.supply_gap.lower,
     status: f.coverage_status,
     baseGap: showBaseline ? baseline[i].supply_gap.point : null,
+    residual: hasClean && showResidual ? f.supply_gap.point - f.clean_mw : null,
   }))
   const midnightTicks = data.filter(d => new Date(d.t).getHours() % 6 === 0).map(d => d.t)
   const grid = dark ? '#27272a' : '#f3f4f6'
@@ -49,7 +58,17 @@ export default function GapChart({ forecasts, baseline, dark, onHover }) {
     <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="flex items-baseline justify-between">
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">Supply gap: demand minus renewables</h2>
-        <span className="text-xs text-gray-500 dark:text-gray-400">below zero = surplus, 90% band</span>
+        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+          {hasClean && (
+            <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" checked={showResidual}
+                     onChange={e => setShowResidual(e.target.checked)}
+                     className="accent-violet-600" />
+              after nuclear + hydro
+            </label>
+          )}
+          <span>below zero = surplus, 90% band</span>
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart
@@ -74,6 +93,12 @@ export default function GapChart({ forecasts, baseline, dark, onHover }) {
                   isAnimationActive={false} name="baseline 1.0×"
                   label={({ index, x, y }) => index === data.length - 1
                     ? <text x={x + 6} y={y + 3} fontSize={10} fill={ink}>1.0×</text> : null} />
+          )}
+          {showResidual && (
+            <Line dataKey="residual" stroke={dark ? '#a78bfa' : '#7c3aed'} strokeWidth={1.5}
+                  strokeDasharray="3 3" dot={false} isAnimationActive={false}
+                  label={({ index, x, y }) => index === data.length - 1
+                    ? <text x={x + 6} y={y + 3} fontSize={10} fill={dark ? '#a78bfa' : '#7c3aed'}>residual</text> : null} />
           )}
           <Line dataKey="point" stroke={colors.gap} strokeWidth={2} dot={false} isAnimationActive={false}
                 label={({ index, x, y }) => index === data.length - 1

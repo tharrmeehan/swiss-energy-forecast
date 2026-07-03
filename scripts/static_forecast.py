@@ -22,11 +22,13 @@ import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
 
-from data.entsoe import fetch_energy
+from data.entsoe import fetch_energy, fetch_generation
 from data.weather import fetch_forecast
 from features.engineer import inference_features, get_feature_cols
 
 TARGETS = ["demand_mw", "solar_mw", "wind_mw"]
+# nuclear plus hydro (pumped storage, run-of-river, reservoir)
+CLEAN_BASELOAD_TYPES = ["B14", "B10", "B11", "B12"]
 HORIZON = 48
 ART = Path(__file__).resolve().parent.parent / "models" / "artifacts"
 OUT = Path(__file__).resolve().parent.parent / "frontend" / "public" / "forecast.json"
@@ -40,6 +42,24 @@ def classify(gap_pt: float, gap_hi: float) -> str:
     return "deficit"
 
 
+def clean_baseload_profile() -> dict[int, float]:
+    """
+    Typical nuclear + hydro generation by hour of day, from the last 14 days.
+    These are dispatchable (or baseload) sources, so a recent hourly profile is
+    a more honest reference than a weather-driven forecast would be.
+    """
+    start, end = date.today() - timedelta(days=14), date.today() + timedelta(days=1)
+    total = None
+    for psr in CLEAN_BASELOAD_TYPES:
+        df = fetch_generation(psr, start, end)
+        if df.empty:
+            continue
+        s = df.set_index("timestamp")["mw"]
+        total = s if total is None else total.add(s, fill_value=0)
+    prof = total.groupby(total.index.hour).mean()
+    return {int(h): float(v) for h, v in prof.items()}
+
+
 def main() -> None:
     now = pd.Timestamp.now(tz="UTC").floor("h")
     # 168h lags plus slack; ENTSO-E publishes with a few hours delay
@@ -47,6 +67,7 @@ def main() -> None:
     history = history[history["timestamp"] <= now]
     weather = fetch_forecast(horizon_hours=HORIZON)
 
+    clean_profile = clean_baseload_profile()
     radii = json.loads((ART / "radii.json").read_text())
     preds = {}
     for target in TARGETS:
@@ -67,8 +88,10 @@ def main() -> None:
         gap_pt = d_pt - (s_pt + w_pt)
         gap_lo = d_lo - (s_hi + w_hi)
         gap_hi = d_hi - (s_lo + w_lo)
+        ts = now + pd.Timedelta(hours=h + 1)
         hours.append({
-            "timestamp": (now + pd.Timedelta(hours=h + 1)).isoformat(),
+            "timestamp": ts.isoformat(),
+            "clean_mw": round(clean_profile.get(ts.hour, 0.0), 1),
             "demand": {"point": d_pt, "lower": d_lo, "upper": d_hi},
             "solar": {"point": s_pt, "lower": s_lo, "upper": s_hi},
             "wind": {"point": w_pt, "lower": w_lo, "upper": w_hi},
