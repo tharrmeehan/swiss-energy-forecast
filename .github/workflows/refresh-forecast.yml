@@ -23,6 +23,11 @@ jobs:
           ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
         run: python -m scripts.static_forecast
 
+      - name: generate backtest.json
+        env:
+          ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
+        run: python -m scripts.static_backtest
+
       - name: deploy to vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

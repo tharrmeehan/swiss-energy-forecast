@@ -25,6 +25,11 @@ export const STATUS_META = {
 export const fmtMW = v =>
   Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(1)} GW` : `${Math.round(v)} MW`
 
+// Axis ticks share one unit (picked from the largest tick), so a 0 gridline
+// doesn't read "0 MW" next to siblings like "7.5 GW".
+export const fmtAxis = (v, maxAbs) =>
+  maxAbs >= 1000 ? `${(v / 1000).toFixed(1)} GW` : `${Math.round(v)} MW`
+
 export const fmtTime = ts =>
   new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 

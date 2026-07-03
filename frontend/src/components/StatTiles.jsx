@@ -18,7 +18,7 @@ function nextWindow(forecasts, status) {
 
 function Tile({ label, value, sub, accent }) {
   return (
-    <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-colors hover:border-gray-300 dark:hover:border-gray-600">
       <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums" style={accent ? { color: accent } : undefined}>
         {value}
@@ -30,6 +30,7 @@ function Tile({ label, value, sub, accent }) {
 
 export default function StatTiles({ forecasts, summary }) {
   const peak = forecasts.reduce((a, b) => (b.supply_gap.point > a.supply_gap.point ? b : a))
+  const peakIsSurplus = peak.supply_gap.point < 0
   const surplusWin = nextWindow(forecasts, 'confirmed_surplus') || nextWindow(forecasts, 'possible_surplus')
   const surplusKind = nextWindow(forecasts, 'confirmed_surplus') ? 'confirmed' : 'possible'
 
@@ -48,10 +49,10 @@ export default function StatTiles({ forecasts, summary }) {
         accent={STATUS.possible_surplus}
       />
       <Tile
-        label="Peak deficit"
-        value={fmtMW(peak.supply_gap.point)}
+        label={peakIsSurplus ? 'Smallest surplus' : 'Peak deficit'}
+        value={fmtMW(Math.abs(peak.supply_gap.point))}
         sub={`at ${new Date(peak.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-        accent={STATUS.deficit}
+        accent={peakIsSurplus ? STATUS.confirmed_surplus : STATUS.deficit}
       />
       <Tile
         label="Next surplus window"

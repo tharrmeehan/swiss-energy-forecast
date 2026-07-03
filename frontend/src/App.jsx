@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useForecast } from './hooks/useForecast'
+import { useBacktest } from './hooks/useBacktest'
 import { applyMultipliers } from './lib/counterfactual'
 import StatTiles from './components/StatTiles'
 import GapChart from './components/GapChart'
 import ForecastChart from './components/ForecastChart'
 import CoverageTimeline from './components/CoverageTimeline'
 import CounterfactualPanel from './components/CounterfactualPanel'
+import BacktestReplay from './components/BacktestReplay'
 
 function useDarkMode() {
   const [dark, setDark] = useState(() =>
@@ -22,7 +24,7 @@ function useDarkMode() {
 function InfoPopover() {
   return (
     <details className="relative text-sm">
-      <summary className="cursor-pointer list-none text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 select-none">
+      <summary className="cursor-pointer list-none rounded text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
         ⓘ how to read this
       </summary>
       <div className="absolute right-0 z-10 mt-2 w-80 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg text-xs text-gray-600 dark:text-gray-300 space-y-2">
@@ -45,11 +47,14 @@ function InfoPopover() {
 }
 
 export default function App() {
-  const [multipliers, setMultipliers] = useState({ solarMultiplier: 1.0, windMultiplier: 1.0 })
+  const [multipliers, setMultipliers] = useState({
+    solarMultiplier: 1.0, windMultiplier: 1.0, demandMultiplier: 1.0, bandMultiplier: 1.0,
+  })
   const [dark, setDark] = useDarkMode()
   const [hoverIdx, setHoverIdx] = useState(null)
 
   const { data: baseline, error } = useForecast({ horizon: 48 })
+  const { data: backtest } = useBacktest()
   const data = useMemo(() => applyMultipliers(baseline, multipliers), [baseline, multipliers])
 
   if (error) return (
@@ -82,7 +87,7 @@ export default function App() {
             <button
               onClick={() => setDark(!dark)}
               aria-label="Toggle dark mode"
-              className="text-sm px-2.5 py-1 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+              className="text-sm px-2.5 py-1 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
               {dark ? '☀ light' : '☾ dark'}
             </button>
           </div>
@@ -98,6 +103,7 @@ export default function App() {
           summary={data.summary}
           baseSummary={baseline?.summary}
         />
+        {backtest && <BacktestReplay backtest={backtest} dark={dark} />}
 
         <footer className="pt-4 pb-8 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400 dark:text-gray-500">
           <div className="flex flex-wrap gap-1.5">
