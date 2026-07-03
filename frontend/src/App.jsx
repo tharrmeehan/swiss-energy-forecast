@@ -8,6 +8,7 @@ import ForecastChart from './components/ForecastChart'
 import CoverageTimeline from './components/CoverageTimeline'
 import CounterfactualPanel from './components/CounterfactualPanel'
 import BacktestReplay from './components/BacktestReplay'
+import { fmtDateTime } from './theme'
 
 function useDarkMode() {
   const [dark, setDark] = useState(() =>
@@ -43,6 +44,15 @@ function InfoPopover() {
         </p>
       </div>
     </details>
+  )
+}
+
+function DataFreshness({ forecast, backtest }) {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+      {forecast?.generated_at && <span>Forecast updated {fmtDateTime(forecast.generated_at)}</span>}
+      {backtest?.generated_at && <span>Backtest updated {fmtDateTime(backtest.generated_at)}</span>}
+    </div>
   )
 }
 
@@ -94,6 +104,7 @@ export default function App() {
         </header>
 
         <StatTiles forecasts={data.forecasts} summary={data.summary} />
+        <DataFreshness forecast={baseline} backtest={backtest} />
         <GapChart forecasts={data.forecasts} baseline={baseline?.forecasts} dark={dark} onHover={setHoverIdx} />
         <CoverageTimeline forecasts={data.forecasts} summary={data.summary} hoverIdx={hoverIdx} onHover={setHoverIdx} />
         <ForecastChart forecasts={data.forecasts} dark={dark} />

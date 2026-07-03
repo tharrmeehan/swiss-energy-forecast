@@ -105,3 +105,15 @@ formula, status consistency, multiplier scaling.
 - [Swissgrid energy statistics](https://www.swissgrid.ch): keyless XLSX fallback,
   `DATA_SOURCE=swissgrid`.
 - [Open-Meteo](https://open-meteo.com): historical and forecast weather, no key.
+
+## Limitations
+
+- The deployed dashboard is static: CI refreshes `forecast.json` and
+  `backtest.json`, then Vercel serves the built React app.
+- Timestamps are shown in UTC. Backtest points are the observed hours; each
+  forecast was made `horizon_h` hours earlier.
+- ENTSO-E and Swissgrid data can arrive late or be revised after publication.
+- Open-Meteo historical weather lags by a few days, so the backtest window avoids
+  the most recent incomplete archive period.
+- The 90% conformal interval is an empirical coverage target, not an operational
+  dispatch guarantee.

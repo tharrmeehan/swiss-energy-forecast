@@ -66,9 +66,14 @@ export default function BacktestReplay({ backtest, dark }) {
   return (
     <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 space-y-3 transition-colors hover:border-gray-300 dark:hover:border-gray-600">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-          Backtest: {backtest.horizon_h}h-ahead predictions vs what actually happened
-        </h2>
+        <div>
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+            Backtest: {backtest.horizon_h}h-ahead predictions vs actuals
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Each point is the observed hour in UTC; the forecast was made {backtest.horizon_h} hours earlier.
+          </p>
+        </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
           {coveredSoFar} / {revealed} hours covered so far
           <span className="ml-1 font-mono tabular-nums font-medium text-gray-700 dark:text-gray-300">({pct}%)</span>

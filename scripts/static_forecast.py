@@ -113,7 +113,7 @@ def main() -> None:
         },
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(out))
+    OUT.write_text(json.dumps(out, indent=2) + "\n")
     print(f"wrote {OUT} ({len(hours)} hours, generated {now})")
 
 
