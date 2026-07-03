@@ -73,7 +73,8 @@ def promote_best() -> list[str]:
             )
             continue
 
-        mv = mlflow.register_model(f"runs:/{best.info.run_id}/model", model_name)
+        model_uri = best.data.tags.get("model_uri", f"runs:/{best.info.run_id}/model")
+        mv = mlflow.register_model(model_uri, model_name)
         client.set_registered_model_alias(model_name, "champion", mv.version)
         print(
             f"[registry] {model_name} v{mv.version} → @champion  "

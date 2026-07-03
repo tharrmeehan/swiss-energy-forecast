@@ -86,9 +86,9 @@ def run_target(df: pd.DataFrame, target: str, params: dict) -> float:
         mapie = calibrate(lgbm, df, target)
         # skops (mlflow.sklearn's serializer) audits pickled types by default;
         # trust our own training output rather than arbitrary untrusted files.
-        mlflow.sklearn.log_model(
+        info = mlflow.sklearn.log_model(
             mapie,
-            "model",
+            name="model",
             skops_trusted_types=[
                 "collections.OrderedDict",
                 "lightgbm.basic.Booster",
@@ -99,6 +99,10 @@ def run_target(df: pd.DataFrame, target: str, params: dict) -> float:
                 "mapie.regression.regression._MapieRegressor",
             ],
         )
+        # DagsHub's MLflow proxy doesn't resolve runs:/<id>/model to the
+        # underlying logged model, so registry.py registers via this URI
+        # instead of reconstructing one from the run id.
+        mlflow.set_tag("model_uri", info.model_uri)
         print(f"[train] logged MapieRegressor for {target}")
     return val_rmse
 
