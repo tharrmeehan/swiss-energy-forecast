@@ -46,6 +46,20 @@ def test_no_nan_in_feature_cols():
     df = build_features(_sample_df(), "demand_mw", 1).dropna(subset=get_feature_cols("demand_mw"))
     assert len(df) > 0
 
+def test_lag_features_nan_across_gap_not_wrong_value():
+    """A missing hour must not silently shift lag values from the wrong hour."""
+    df = _sample_df()
+    df.loc[49, "demand_mw"] = -12345.0  # sentinel a buggy positional shift would leak
+    gapped = df.drop(index=50).reset_index(drop=True)  # hour 50 missing entirely
+
+    out = build_features(gapped, "demand_mw", hours_ahead=1)
+    hour_51 = pd.Timestamp("2024-01-01", tz="UTC") + pd.Timedelta(hours=51)
+    row = out[out["timestamp"] == hour_51]
+    assert len(row) == 1
+    assert pd.isna(row.iloc[0]["demand_mw_lag_1h"]), (
+        "lag_1h at hour 51 must be NaN (hour 50 is missing), not hour 49's sentinel value"
+    )
+
 
 # --- build_features: target-time correctness ---
 

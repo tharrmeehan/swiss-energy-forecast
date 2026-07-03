@@ -26,6 +26,14 @@ def build_features(df: pd.DataFrame, target: str, hours_ahead: int) -> pd.DataFr
     df = df.copy().sort_values("timestamp").reset_index(drop=True)
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
 
+    # Force one row per hour so the positional shift()s below equal true
+    # hour-offsets even if the source data has gaps. A missing hour becomes
+    # an all-NaN row here, which propagates into "label" and the feature
+    # cols and gets dropped by build_training_frame's dropna — instead of
+    # silently shifting lag/weather values across the gap onto the wrong hour.
+    full_index = pd.date_range(df["timestamp"].min(), df["timestamp"].max(), freq="h", tz="UTC")
+    df = df.set_index("timestamp").reindex(full_index).rename_axis("timestamp").reset_index()
+
     # Calendar at TARGET time t+hours_ahead
     target_ts = df["timestamp"] + pd.Timedelta(hours=hours_ahead)
     df["hour_of_day"]      = target_ts.dt.hour
