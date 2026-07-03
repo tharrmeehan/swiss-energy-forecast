@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, ComposedChart, Line, Area,
   XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts'
-import { SERIES, fmtMW, fmtAxis, fmtTime, fmtHourOrDay } from '../theme'
+import { SERIES, fmtMW, fmtAxis, fmtDateTime, fmtHourOrDay } from '../theme'
 
 const ACTUAL = { light: '#0891b2', dark: '#22d3ee' }
 const STEP_MS = 60
@@ -14,7 +14,7 @@ function ReplayTooltip({ active, payload, label }) {
   if (!row || row.actual == null) return null
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-xs shadow-md">
-      <p className="font-medium text-gray-900 dark:text-gray-100">{fmtTime(label)}</p>
+      <p className="font-medium text-gray-900 dark:text-gray-100">{fmtDateTime(label)}</p>
       <p className="tabular-nums text-gray-700 dark:text-gray-300">
         predicted {fmtMW(row.predPoint)} <span className="text-gray-400">({fmtMW(row.predLower)} … {fmtMW(row.predUpper)})</span>
       </p>
@@ -55,7 +55,7 @@ export default function BacktestReplay({ backtest, dark }) {
     [points, revealed]
   )
 
-  const midnightTicks = chartData.filter(d => new Date(d.t).getHours() % 12 === 0).map(d => d.t)
+  const midnightTicks = chartData.filter(d => new Date(d.t).getUTCHours() % 12 === 0).map(d => d.t)
   const colors = dark ? SERIES.dark : SERIES.light
   const actualColor = dark ? ACTUAL.dark : ACTUAL.light
   const grid = dark ? '#27272a' : '#f3f4f6'

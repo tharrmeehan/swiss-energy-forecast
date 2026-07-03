@@ -2,7 +2,7 @@ import {
   ResponsiveContainer, ComposedChart, Line, Area,
   XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts'
-import { SERIES, fmtMW, fmtAxis, fmtTime, fmtHourOrDay } from '../theme'
+import { SERIES, fmtMW, fmtAxis, fmtDateTime, fmtHourOrDay } from '../theme'
 
 const DEFS = [
   { key: 'demand', label: 'Demand' },
@@ -16,7 +16,7 @@ function SmallTooltip({ active, payload, label, name }) {
   if (!row) return null
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-xs shadow-md">
-      <p className="font-medium text-gray-900 dark:text-gray-100">{fmtTime(label)}</p>
+      <p className="font-medium text-gray-900 dark:text-gray-100">{fmtDateTime(label)}</p>
       <p className="tabular-nums text-gray-700 dark:text-gray-300">
         {name} {fmtMW(row.point)} <span className="text-gray-400">({fmtMW(row.lower)} … {fmtMW(row.upper)})</span>
       </p>
@@ -32,7 +32,7 @@ function Chart({ forecasts, seriesKey, label, color, dark }) {
     upper: f[seriesKey].upper,
     band: f[seriesKey].upper - f[seriesKey].lower,
   }))
-  const midnightTicks = data.filter(d => new Date(d.t).getHours() % 12 === 0).map(d => d.t)
+  const midnightTicks = data.filter(d => new Date(d.t).getUTCHours() % 12 === 0).map(d => d.t)
   const maxAbs = Math.max(...data.map(d => Math.abs(d.upper)), ...data.map(d => Math.abs(d.lower)))
   const grid = dark ? '#27272a' : '#f3f4f6'
   const ink = dark ? '#a1a1aa' : '#6b7280'

@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, ComposedChart, Line, Area,
   XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
 } from 'recharts'
-import { SERIES, STATUS, STATUS_META, fmtMW, fmtAxis, fmtTime, fmtHourOrDay } from '../theme'
+import { SERIES, STATUS, STATUS_META, fmtMW, fmtAxis, fmtDateTime, fmtHourOrDay } from '../theme'
 
 function GapTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
@@ -12,7 +12,7 @@ function GapTooltip({ active, payload, label }) {
   const meta = STATUS_META[row.status]
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-xs shadow-md">
-      <p className="font-medium text-gray-900 dark:text-gray-100">{fmtTime(label)}</p>
+      <p className="font-medium text-gray-900 dark:text-gray-100">{fmtDateTime(label)}</p>
       <p className="mt-1 tabular-nums text-gray-700 dark:text-gray-300">
         gap {fmtMW(row.point)} <span className="text-gray-400">({fmtMW(row.lower)} … {fmtMW(row.upper)})</span>
       </p>
@@ -50,7 +50,7 @@ export default function GapChart({ forecasts, baseline, dark, onHover }) {
     baseGap: showBaseline ? baseline[i].supply_gap.point : null,
     residual: hasClean && showResidual ? f.supply_gap.point - f.clean_mw : null,
   }))
-  const midnightTicks = data.filter(d => new Date(d.t).getHours() % 6 === 0).map(d => d.t)
+  const midnightTicks = data.filter(d => new Date(d.t).getUTCHours() % 6 === 0).map(d => d.t)
   const maxAbs = Math.max(...data.map(d => Math.abs(d.upper)), ...data.map(d => Math.abs(d.lower)))
   const grid = dark ? '#27272a' : '#f3f4f6'
   const ink = dark ? '#a1a1aa' : '#6b7280'

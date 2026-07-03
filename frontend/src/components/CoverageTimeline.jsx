@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { STATUS, STATUS_META, fmtMW } from '../theme'
-
-const fmtHour = ts => new Date(ts).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })
+import { STATUS, STATUS_META, fmtMW, fmtDateTime, fmtHourOrDay } from '../theme'
 
 export default function CoverageTimeline({ forecasts, summary, hoverIdx, onHover }) {
   const [localIdx, setLocalIdx] = useState(null)
@@ -41,7 +39,7 @@ export default function CoverageTimeline({ forecasts, summary, hoverIdx, onHover
       <div className="flex justify-between text-xs text-gray-400 min-h-[1.25rem]">
         {activeHour ? (
           <span className="text-gray-700 dark:text-gray-300 tabular-nums">
-            {fmtHour(activeHour.timestamp)}: {STATUS_META[activeHour.coverage_status].glyph}{' '}
+            {fmtDateTime(activeHour.timestamp)}: {STATUS_META[activeHour.coverage_status].glyph}{' '}
             {STATUS_META[activeHour.coverage_status].label},{' '}
             {activeHour.supply_gap.point >= 0
               ? `${fmtMW(activeHour.supply_gap.point)} deficit`
@@ -49,8 +47,8 @@ export default function CoverageTimeline({ forecasts, summary, hoverIdx, onHover
           </span>
         ) : (
           <>
-            <span>{fmtHour(forecasts[0]?.timestamp)}</span>
-            <span>{fmtHour(forecasts[forecasts.length - 1]?.timestamp)}</span>
+            <span>{fmtHourOrDay(forecasts[0]?.timestamp)}</span>
+            <span>{fmtHourOrDay(forecasts[forecasts.length - 1]?.timestamp)}</span>
           </>
         )}
       </div>

@@ -31,11 +31,22 @@ export const fmtAxis = (v, maxAbs) =>
   maxAbs >= 1000 ? `${(v / 1000).toFixed(1)} GW` : `${Math.round(v)} MW`
 
 export const fmtTime = ts =>
-  new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
+
+export const fmtDateTime = ts =>
+  new Date(ts).toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+    timeZoneName: 'short',
+  })
 
 export const fmtHourOrDay = ts => {
   const d = new Date(ts)
-  return d.getHours() === 0
-    ? d.toLocaleDateString([], { weekday: 'short' })
-    : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return d.getUTCHours() === 0
+    ? d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })
+    : fmtTime(ts)
 }

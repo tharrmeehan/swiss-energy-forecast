@@ -1,10 +1,9 @@
-import { fmtMW, STATUS, STATUS_META } from '../theme'
+import { fmtMW, STATUS, STATUS_META, fmtDateTime, fmtTime } from '../theme'
 
 const fmtWindow = (start, end) => {
   const s = new Date(start), e = new Date(end)
-  const day = s.toLocaleDateString([], { weekday: 'short' })
-  const hh = d => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  return `${day} ${hh(s)}–${hh(e)}`
+  const day = s.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'UTC' })
+  return `${day} ${fmtTime(s)}–${fmtTime(e)} UTC`
 }
 
 function nextWindow(forecasts, status) {
@@ -51,7 +50,7 @@ export default function StatTiles({ forecasts, summary }) {
       <Tile
         label={peakIsSurplus ? 'Smallest surplus' : 'Peak deficit'}
         value={fmtMW(Math.abs(peak.supply_gap.point))}
-        sub={`at ${new Date(peak.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+        sub={`at ${fmtDateTime(peak.timestamp)}`}
         accent={peakIsSurplus ? STATUS.confirmed_surplus : STATUS.deficit}
       />
       <Tile

@@ -41,6 +41,12 @@ def classify(gap_pt: float, gap_hi: float) -> str:
     return "deficit"
 
 
+def iso_utc(ts) -> str:
+    ts = pd.Timestamp(ts)
+    ts = ts.tz_localize("UTC") if ts.tzinfo is None else ts.tz_convert("UTC")
+    return ts.isoformat()
+
+
 def main() -> None:
     now = pd.Timestamp.now(tz="UTC").floor("h")
     window_start = now - pd.Timedelta(days=BACKTEST_DAYS)
@@ -70,7 +76,7 @@ def main() -> None:
             point, lower = point.clip(min=0), lower.clip(min=0)
 
         series[target] = pd.DataFrame({
-            "timestamp": target_ts.values,
+            "timestamp": target_ts.reset_index(drop=True),
             "point": point, "lower": lower, "upper": upper,
             "actual": frame["label"].values,
         }).set_index("timestamp")
@@ -93,7 +99,7 @@ def main() -> None:
         is_covered = bool(gap["lower"] <= gap["actual"] <= gap["upper"])
         covered += int(is_covered)
         points.append({
-            "timestamp": ts.isoformat(),
+            "timestamp": iso_utc(ts),
             "demand": {k: float(v) for k, v in d.items()},
             "solar": {k: float(v) for k, v in s.items()},
             "wind": {k: float(v) for k, v in w.items()},
@@ -104,7 +110,7 @@ def main() -> None:
 
     out = {
         "horizon_h": HORIZON_H,
-        "generated_at": now.isoformat(),
+        "generated_at": iso_utc(now),
         "points": points,
         "summary": {
             "hours": len(points),
