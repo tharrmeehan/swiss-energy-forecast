@@ -36,6 +36,7 @@ export default function GapChart({ forecasts, baseline, dark, onHover }) {
     t: f.timestamp,
     point: f.supply_gap.point,
     lower: f.supply_gap.lower,
+    upper: f.supply_gap.upper,
     band: f.supply_gap.upper - f.supply_gap.lower,
     status: f.coverage_status,
     baseGap: showBaseline ? baseline[i].supply_gap.point : null,

@@ -29,6 +29,7 @@ function Chart({ forecasts, seriesKey, label, color, dark }) {
     t: f.timestamp,
     point: f[seriesKey].point,
     lower: f[seriesKey].lower,
+    upper: f[seriesKey].upper,
     band: f[seriesKey].upper - f[seriesKey].lower,
   }))
   const midnightTicks = data.filter(d => new Date(d.t).getHours() % 12 === 0).map(d => d.t)

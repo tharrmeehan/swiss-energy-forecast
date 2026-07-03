@@ -54,7 +54,10 @@ def main() -> None:
         X = inference_features(history, target, weather, now, HORIZON)
         point = booster.predict(X[get_feature_cols(target)])
         r = radii[target]
-        preds[target] = (point, point - r, point + r)
+        lower, upper = point - r, point + r
+        if target in ("solar_mw", "wind_mw"):  # generation can't go negative
+            point, lower = point.clip(min=0), lower.clip(min=0)
+        preds[target] = (point, lower, upper)
 
     hours = []
     for h in range(HORIZON):
