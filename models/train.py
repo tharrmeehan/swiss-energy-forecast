@@ -84,7 +84,21 @@ def run_target(df: pd.DataFrame, target: str, params: dict) -> float:
         print(f"[train] {target} val_rmse={val_rmse:.1f}")
 
         mapie = calibrate(lgbm, df, target)
-        mlflow.sklearn.log_model(mapie, "model")
+        # skops (mlflow.sklearn's serializer) audits pickled types by default;
+        # trust our own training output rather than arbitrary untrusted files.
+        mlflow.sklearn.log_model(
+            mapie,
+            "model",
+            skops_trusted_types=[
+                "collections.OrderedDict",
+                "lightgbm.basic.Booster",
+                "lightgbm.sklearn.LGBMRegressor",
+                "mapie.conformity_scores.bounds.absolute.AbsoluteConformityScore",
+                "mapie.estimator.regressor.EnsembleRegressor",
+                "mapie.regression.regression.SplitConformalRegressor",
+                "mapie.regression.regression._MapieRegressor",
+            ],
+        )
         print(f"[train] logged MapieRegressor for {target}")
     return val_rmse
 
