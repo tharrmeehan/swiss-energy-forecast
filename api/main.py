@@ -96,7 +96,10 @@ async def forecast(
     predictions: dict[str, tuple] = {}
     for target in _TARGETS:
         X = inference_features(history, target, weather, now, horizon)
-        predictions[target] = predict_with_intervals(_models[target], X)
+        point, lower, upper = predict_with_intervals(_models[target], X)
+        if target in ("solar_mw", "wind_mw"):  # generation can't go negative
+            point, lower = point.clip(min=0), lower.clip(min=0)
+        predictions[target] = (point, lower, upper)
 
     # Apply capacity multipliers to solar and wind (point, lower, upper all scale linearly)
     s_pt, s_lo, s_hi = predictions["solar_mw"]
@@ -113,8 +116,8 @@ async def forecast(
         w_pt, w_lo, w_hi = (predictions["wind_mw"][k][h]   for k in range(3))
 
         gap_pt = d_pt - (s_pt + w_pt)
-        gap_lo = d_lo - (s_hi + w_hi)  # worst case for the grid (most deficit)
-        gap_hi = d_hi - (s_lo + w_lo)  # best case (least deficit)
+        gap_lo = d_lo - (s_hi + w_hi)  # best case for the grid (least deficit)
+        gap_hi = d_hi - (s_lo + w_lo)  # worst case (most deficit)
 
         if gap_hi < 0:
             status = "confirmed_surplus"  # renewables exceed demand even in the worst case

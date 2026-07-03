@@ -88,6 +88,26 @@ def test_supply_gap_and_status_consistent(client):
     assert counts["confirmed_surplus_hours"] + counts["possible_surplus_hours"] + counts["deficit_hours"] == 48
 
 
+def test_negative_solar_wind_clipped_to_zero():
+    models = {
+        "demand_mw": _mock_mapie(100.0, 300.0),   # point-radius goes negative too
+        "solar_mw":  _mock_mapie(10.0, 100.0),    # point=10, lower=-90 -> must clip
+        "wind_mw":   _mock_mapie(5.0, 100.0),     # point=5,  lower=-95 -> must clip
+    }
+    with patch.object(api_main, "_models", models), \
+         patch.object(api_main, "db_query", return_value=_mock_history()), \
+         patch.object(api_main, "fetch_forecast", return_value=_mock_weather()):
+        body = TestClient(app).get("/forecast?horizon=24").json()
+
+    for h in body["forecasts"]:
+        assert h["solar"]["point"] >= 0
+        assert h["solar"]["lower"] >= 0
+        assert h["wind"]["point"] >= 0
+        assert h["wind"]["lower"] >= 0
+        # demand isn't a generation figure — not clipped, should stay negative here
+        assert h["demand"]["lower"] < 0
+
+
 def test_multiplier_scales_solar(client):
     base = client.get("/forecast?horizon=24").json()
     boosted = client.get("/forecast?horizon=24&solar_multiplier=3.0").json()
