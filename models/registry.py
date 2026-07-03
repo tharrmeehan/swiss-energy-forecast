@@ -41,7 +41,7 @@ def should_promote(candidate_rmse: float, champion_rmse: float | None) -> bool:
 
 def promote_best() -> list[str]:
     """Promote each target's best new run over its current champion. Returns promoted targets."""
-    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000"))
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5001"))
     client = MlflowClient()
 
     exp = client.get_experiment_by_name(EXPERIMENT)

@@ -28,7 +28,7 @@ _models: dict = {}  # target → fitted MapieRegressor
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000"))
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5001"))
     for target in _TARGETS:
         name = target.replace("_mw", "") + "-lgbm"
         _models[target] = mlflow.sklearn.load_model(f"models:/{name}@champion")

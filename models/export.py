@@ -54,7 +54,7 @@ def export_promoted(promoted_targets: list[str]) -> None:
     if not promoted_targets:
         print("[export] nothing promoted this run, skipping")
         return
-    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000"))
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5001"))
     df = db_query()
     for target in promoted_targets:
         export_target(target, df)

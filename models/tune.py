@@ -46,7 +46,7 @@ def tune(df: pd.DataFrame, target: str, n_trials: int = 50) -> dict:
 
 
 def main() -> None:
-    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000"))
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5001"))
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", choices=["demand_mw", "solar_mw", "wind_mw"], required=True)
     parser.add_argument("--trials", type=int, default=50)
