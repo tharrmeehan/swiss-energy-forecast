@@ -1,41 +1,25 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-export function useForecast({ horizon = 48, solarMultiplier = 1.0, windMultiplier = 1.0 } = {}) {
-  const [data, setData]       = useState(null)   // kept stale during refetch so the page doesn't flash
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState(null)
-  const abortRef = useRef(null)
+// Fetch the base (1.0x) forecast once. In dev this hits the local FastAPI;
+// in production it falls back to the static forecast.json that CI refreshes.
+// Counterfactual multipliers are applied client side (lib/counterfactual.js).
+export function useForecast({ horizon = 48 } = {}) {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
 
   const fetch_ = useCallback(async () => {
-    abortRef.current?.abort()
-    const ctrl = new AbortController()
-    abortRef.current = ctrl
-    setLoading(true)
     setError(null)
     try {
-      const url = `/api/forecast?horizon=${horizon}&solar_multiplier=${solarMultiplier}&wind_multiplier=${windMultiplier}`
-      const res = await fetch(url, { signal: ctrl.signal })
+      let res = await fetch(`/api/forecast?horizon=${horizon}`).catch(() => null)
+      if (!res?.ok) res = await fetch('/forecast.json')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setData(await res.json())
-      setLoading(false)
     } catch (e) {
-      if (e.name === 'AbortError') return  // superseded by a newer request
       setError(e.message)
-      setLoading(false)
     }
-  }, [horizon, solarMultiplier, windMultiplier])
+  }, [horizon])
 
   useEffect(() => { fetch_() }, [fetch_])
 
-  return { data, loading, error, refetch: fetch_ }
-}
-
-// Debounced mirror of a value. Sliders update instantly, fetches wait for the pause.
-export function useDebounced(value, ms = 300) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(t)
-  }, [value, ms])
-  return debounced
+  return { data, error, refetch: fetch_ }
 }

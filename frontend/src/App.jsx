@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useForecast, useDebounced } from './hooks/useForecast'
+import { useState, useEffect, useMemo } from 'react'
+import { useForecast } from './hooks/useForecast'
+import { applyMultipliers } from './lib/counterfactual'
 import StatTiles from './components/StatTiles'
 import GapChart from './components/GapChart'
 import ForecastChart from './components/ForecastChart'
@@ -45,12 +46,11 @@ function InfoPopover() {
 
 export default function App() {
   const [multipliers, setMultipliers] = useState({ solarMultiplier: 1.0, windMultiplier: 1.0 })
-  const debounced = useDebounced(multipliers, 300)
   const [dark, setDark] = useDarkMode()
   const [hoverIdx, setHoverIdx] = useState(null)
 
-  const { data, loading, error } = useForecast({ horizon: 48, ...debounced })
-  const { data: baseline } = useForecast({ horizon: 48 })  // fixed 1.0x for the ghost line and diff badge
+  const { data: baseline, error } = useForecast({ horizon: 48 })
+  const data = useMemo(() => applyMultipliers(baseline, multipliers), [baseline, multipliers])
 
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
@@ -68,7 +68,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <main className={`max-w-6xl mx-auto p-6 space-y-4 transition-opacity ${loading ? 'opacity-60' : ''}`}>
+      <main className="max-w-6xl mx-auto p-6 space-y-4">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Swiss Energy Forecast</h1>

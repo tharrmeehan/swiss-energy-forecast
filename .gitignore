@@ -12,3 +12,4 @@ mlflow_data/
 node_modules/
 dist/
 docs/
+.vercel/
